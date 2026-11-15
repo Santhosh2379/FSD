@@ -1,26 +1,33 @@
 import express from "express";
+import "dotenv/config";
 import { MongoClient, ObjectId } from "mongodb";
 
 const app = express();
-const port = 7000;
 
 // MongoDB connection
-const mongoUrl = "mongodb://admin:admin123@localhost:27017";
-const databaseName = "library_db";
+// MongoDB Atlas connection
+const mongoUrl = process.env.MONGODB_URI;
+const databaseName = process.env.DB_NAME || "library_db";
+
+if (!mongoUrl) {
+  throw new Error("MONGODB_URI environment variable is missing");
+}
 
 const client = new MongoClient(mongoUrl);
 
 let db;
-await client
-  .connect()
-  .then(() => {
-    db = client.db(databaseName);
-    console.log("Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.error("Failed to connect to MongoDB", err);
-    process.exit(1);
-  });
+
+try {
+  await client.connect();
+
+  db = client.db(databaseName);
+
+  console.log("Connected to MongoDB Atlas successfully");
+} catch (err) {
+  console.error("Failed to connect to MongoDB Atlas:", err);
+  process.exit(1);
+}
+
 
 // Middleware
 app.use(express.json());
@@ -30,7 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 // Create a new book - POST /api/v1/books
 app.post("/api/v1/books", (req, res) => {
   const { title, author, category, price } = req.body;
-  if (!title || !author || !category || !price) {
+  if (!title || !author || !category || price == null) {
     const err = new Error("All book fields are required");
     err.status = 400;
     throw err;
@@ -76,6 +83,11 @@ app.get("/api/v1/books", (req, res) => {
 // Get a single book by ID - GET /api/v1/books/:id
 app.get("/api/v1/books/:id", (req, res) => {
   const bookId = req.params.id;
+  if (!ObjectId.isValid(req.params.id)) {
+  return res.status(400).json({
+    message: "Invalid book ID",
+  });
+}
   db.collection("books")
     .findOne({ _id: new ObjectId(bookId) })
     .then((book) => {
@@ -94,8 +106,13 @@ app.get("/api/v1/books/:id", (req, res) => {
 // Update a book by ID - PUT /api/v1/books/:id
 app.put("/api/v1/books/:id", (req, res) => {
   const bookId = req.params.id;
+  if (!ObjectId.isValid(req.params.id)) {
+  return res.status(400).json({
+    message: "Invalid book ID",
+  });
+}
   const { title, author, category, price } = req.body;
-  if (!title || !author || !category || !price) {
+  if (!title || !author || !category || price == null) {
     return res.status(400).json({ message: "All book fields are required" });
   }
   const book = { title, author, category, price };
@@ -118,6 +135,11 @@ app.put("/api/v1/books/:id", (req, res) => {
 // Delete a book by ID - DELETE /api/v1/books/:id
 app.delete("/api/v1/books/:id", (req, res) => {
   const bookId = req.params.id;
+  if (!ObjectId.isValid(req.params.id)) {
+  return res.status(400).json({
+    message: "Invalid book ID",
+  });
+}
   db.collection("books")
     .deleteOne({ _id: new ObjectId(bookId) })
     .then((result) => {
@@ -144,6 +166,8 @@ app.use((err, req, res, next) => {
     .json({ message: err.message || "Internal Server Error" });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+const PORT = process.env.PORT || 7000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT}`);
 });
