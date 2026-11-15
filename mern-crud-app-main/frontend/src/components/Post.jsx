@@ -8,7 +8,7 @@ function Post({ post }) {
   };
 
   const handleDelete = async () => {
-    await fetch(`https://mern-crud-backend-6moo.onrender.com/api/v1/posts/${post._id}`, {
+    await fetch(`https://fsd-h4kt.onrender.com/api/v1/posts/${post._id}`, {
       method: "DELETE",
     });
     window.location.reload();

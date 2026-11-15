@@ -12,7 +12,7 @@ function AddEditForm() {
     if (id) {
       async function fetchPost() {
         const response = await fetch(
-          `https://mern-crud-backend-6moo.onrender.com/api/v1/posts/${id}`
+          `https://fsd-h4kt.onrender.com/api/v1/posts/${id}`
         );
         const data = await response.json();
         setTitle(data.data.title);
@@ -29,8 +29,8 @@ function AddEditForm() {
     const method = id ? "PUT" : "POST";
 
     const url = id
-      ? `https://mern-crud-backend-6moo.onrender.com/api/v1/posts/${id}`
-      : "https://mern-crud-backend-6moo.onrender.com/api/v1/posts";
+      ? `https://fsd-h4kt.onrender.com/api/v1/posts/${id}`
+      : "https://fsd-h4kt.onrender.com/api/v1/posts";
 
     await fetch(url, {
       method,
