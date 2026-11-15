@@ -1,39 +1,62 @@
+
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 dotenv.config();
 
+const app = express();
+
 const PORT = process.env.PORT || 8000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
-const app = express();
+// ==============================
+// MIDDLEWARE
+// ==============================
 
 app.use(express.json());
 
-// Establishing connecting with mongodb
-mongoose.connect(MONGODB_URI)
-    .then(() => {
-        console.log("Connected to MongoDB");
-    })
-    .catch((err) => {
-        console.log("Problem while connecting MongoDB", err);
-    });
+// ==============================
+// MONGODB ATLAS CONNECTION
+// ==============================
 
-// 1. Schema and Model creation
+if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI environment variable is missing");
+}
+
+// ==============================
+// SCHEMA AND MODEL CREATION
+// ==============================
+
 const movieSchema = new mongoose.Schema({
-    title: { type: String, required: true },
+    title: {
+        type: String,
+        required: true
+    },
     director: String,
-    category: { type: String, required: true },
-    price: { type: Number, required: true },
-    year: { type: Number, required: true }
+    category: {
+        type: String,
+        required: true
+    },
+    price: {
+        type: Number,
+        required: true
+    },
+    year: {
+        type: Number,
+        required: true
+    }
 });
 
 const Movie = mongoose.model("movie", movieSchema);
 
-//CRUD
-// 2) Create
-app.post("/api/v1/movies", (req, res) => {
+// ==============================
+// CREATE MOVIE
+// POST /api/v1/movies
+// ==============================
+
+app.post("/api/v1/movies", (req, res, next) => {
+
     const newMovie = new Movie(req.body);
 
     newMovie.save()
@@ -43,17 +66,17 @@ app.post("/api/v1/movies", (req, res) => {
                 data: result
             });
         })
-        .catch((err) => {
-    console.log("CREATE ERROR:", err);
-    res.status(500).json({
-        message: "Problem while creating movie",
-        error: err.message
-    });
-});
+        .catch(next);
+
 });
 
-// 3) Read
-app.get("/api/v1/movies", (req, res) => {
+// ==============================
+// GET ALL MOVIES / FILTER BY CATEGORY
+// GET /api/v1/movies
+// ==============================
+
+app.get("/api/v1/movies", (req, res, next) => {
+
     const { category } = req.query;
 
     const filter = category ? { category } : {};
@@ -65,88 +88,179 @@ app.get("/api/v1/movies", (req, res) => {
                 data: result
             });
         })
-        .catch((err) => {
-            res.status(500).json({
-                message: "Problem while retrieving movies"
-            });
-        });
+        .catch(next);
+
 });
 
-// 4) Read by ID
-app.get("/api/v1/movies/:id", (req, res) => {
+// ==============================
+// GET MOVIE BY ID
+// GET /api/v1/movies/:id
+// ==============================
+
+app.get("/api/v1/movies/:id", (req, res, next) => {
+
     const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({
+            message: "Invalid movie ID"
+        });
+    }
 
     Movie.findById(id)
         .then((result) => {
+
             if (!result) {
-                return res.status(404).json({ message: "Movie not found" })
+                return res.status(404).json({
+                    message: "Movie not found"
+                });
             }
 
             res.status(200).json({
                 message: "Movie retrieved successfully",
                 data: result
             });
+
         })
-        .catch((err) => {
-            res.status(500).json({
-                message: "Problem while retrieving movie"
-            });
-        });
+        .catch(next);
+
 });
 
-// 5) Update by ID
-app.put("/api/v1/movies/:id", (req, res) => {
+// ==============================
+// UPDATE MOVIE BY ID
+// PUT /api/v1/movies/:id
+// ==============================
+
+app.put("/api/v1/movies/:id", (req, res, next) => {
+
     const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({
+            message: "Invalid movie ID"
+        });
+    }
+
     const updateData = req.body;
 
-    Movie.findByIdAndUpdate(id, updateData, { new: true })
+    Movie.findByIdAndUpdate(
+        id,
+        updateData,
+        {
+            new: true,
+            runValidators: true
+        }
+    )
         .then((result) => {
+
             if (!result) {
-                return res.status(404).json({ message: "Movie not found" })
+                return res.status(404).json({
+                    message: "Movie not found"
+                });
             }
 
             res.status(200).json({
                 message: "Movie updated successfully",
                 data: result
             });
+
         })
-        .catch((err) => {
-            res.status(500).json({
-                message: "Problem while updating movie"
-            });
-        });
+        .catch(next);
+
 });
 
-// 6) Delete by ID
-app.delete("/api/v1/movies/:id", (req, res) => {
+// ==============================
+// DELETE MOVIE BY ID
+// DELETE /api/v1/movies/:id
+// ==============================
+
+app.delete("/api/v1/movies/:id", (req, res, next) => {
+
     const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({
+            message: "Invalid movie ID"
+        });
+    }
 
     Movie.findByIdAndDelete(id)
         .then((result) => {
+
             if (!result) {
-                return res.status(404).json({ message: "Movie not found" })
+                return res.status(404).json({
+                    message: "Movie not found"
+                });
             }
 
             res.status(200).json({
                 message: "Movie deleted successfully",
                 data: result
             });
+
         })
-        .catch((err) => {
-            res.status(500).json({
-                message: "Problem while deleting movie"
-            });
-        });
+        .catch(next);
+
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    res.status(err.status || 500);
-    res.json({
-        message: err.message || "Internal server error"
+// ==============================
+// 404 NOT FOUND MIDDLEWARE
+// ==============================
+
+app.use((req, res) => {
+    res.status(404).json({
+        message: "Not Found"
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+// ==============================
+// ERROR HANDLING MIDDLEWARE
+// ==============================
+
+app.use((err, req, res, next) => {
+
+    console.error("ERROR:", err);
+
+    if (err.name === "ValidationError") {
+        return res.status(400).json({
+            message: "Validation failed",
+            error: err.message
+        });
+    }
+
+    if (err.name === "CastError") {
+        return res.status(400).json({
+            message: "Invalid data format",
+            error: err.message
+        });
+    }
+
+    res.status(err.status || 500).json({
+        message: err.status ? err.message : "Internal server error"
+    });
+
 });
+
+// ==============================
+// CONNECT TO MONGODB AND START SERVER
+// ==============================
+
+mongoose.connect(MONGODB_URI, {
+    dbName: process.env.DB_NAME || "mongoose_db"
+})
+    .then(() => {
+
+        console.log("Connected to MongoDB Atlas successfully");
+
+        app.listen(PORT, "0.0.0.0", () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+
+    })
+    .catch((err) => {
+
+        console.error("MongoDB connection failed:", err);
+
+        process.exit(1);
+
+    });
