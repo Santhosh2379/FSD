@@ -1,14 +1,14 @@
+
 import mongoose from "mongoose";
 
-const connectDB = (mongoUri) => {
-  mongoose
-    .connect(mongoUri)
-    .then(() => {
-      console.log("Connected to MongoDB");
-    })
-    .catch((err) => {
-      console.log("Problem while connecting mongoDB", err);
-    });
+const connectDB = async (mongoUri) => {
+  try {
+    await mongoose.connect(mongoUri);
+    console.log("Connected to MongoDB");
+  } catch (err) {
+    console.error("Problem while connecting MongoDB:", err);
+    throw err;
+  }
 };
 
 export default connectDB;
