@@ -56,9 +56,7 @@ app.post("/api/v1/books", (req, res) => {
         .status(201)
         .json({ message: "Book created successfully", data: newBook });
     })
-    .catch((err) => {
-      throw err;
-    });
+    .catch(next);
 });
 
 // Get books by category - GET /api/v1/books?category=categoryName
@@ -75,9 +73,7 @@ app.get("/api/v1/books", (req, res) => {
         .status(200)
         .json({ message: "Books fetched successfully", data: books });
     })
-    .catch((err) => {
-      throw err;
-    });
+    .catch(next);
 });
 
 // Get a single book by ID - GET /api/v1/books/:id
@@ -98,9 +94,7 @@ app.get("/api/v1/books/:id", (req, res) => {
         .status(200)
         .json({ message: "Book fetched successfully", data: book });
     })
-    .catch((err) => {
-      throw err;
-    });
+    .catch(next);
 });
 
 // Update a book by ID - PUT /api/v1/books/:id
@@ -127,9 +121,7 @@ app.put("/api/v1/books/:id", (req, res) => {
         data: { _id: new ObjectId(bookId), ...book },
       });
     })
-    .catch((err) => {
-      throw err;
-    });
+    .catch(next);
 });
 
 // Delete a book by ID - DELETE /api/v1/books/:id
@@ -148,9 +140,7 @@ app.delete("/api/v1/books/:id", (req, res) => {
       }
       res.status(200).json({ message: "Book deleted successfully" });
     })
-    .catch((err) => {
-      throw err;
-    });
+    .catch(next);
 });
 
 // 404 Not Found middleware
