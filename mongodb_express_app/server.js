@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //CRUD API endpoints
 // Create a new book - POST /api/v1/books
-app.post("/api/v1/books", (req, res) => {
+app.post("/api/v1/books", (req, res, next) => {
   const { title, author, category, price } = req.body;
   if (!title || !author || !category || price == null) {
     const err = new Error("All book fields are required");
@@ -62,7 +62,7 @@ app.post("/api/v1/books", (req, res) => {
 // Get books by category - GET /api/v1/books?category=categoryName
 // Get all books - GET /api/v1/books
 
-app.get("/api/v1/books", (req, res) => {
+app.get("/api/v1/books", (req, res, next) => {
   const category = req.query.category;
   const query = category ? { category } : {};
   db.collection("books")
@@ -77,7 +77,7 @@ app.get("/api/v1/books", (req, res) => {
 });
 
 // Get a single book by ID - GET /api/v1/books/:id
-app.get("/api/v1/books/:id", (req, res) => {
+app.get("/api/v1/books/:id", (req, res, next) => {
   const bookId = req.params.id;
   if (!ObjectId.isValid(req.params.id)) {
   return res.status(400).json({
@@ -98,7 +98,7 @@ app.get("/api/v1/books/:id", (req, res) => {
 });
 
 // Update a book by ID - PUT /api/v1/books/:id
-app.put("/api/v1/books/:id", (req, res) => {
+app.put("/api/v1/books/:id", (req, res, next) => {
   const bookId = req.params.id;
   if (!ObjectId.isValid(req.params.id)) {
   return res.status(400).json({
@@ -125,7 +125,7 @@ app.put("/api/v1/books/:id", (req, res) => {
 });
 
 // Delete a book by ID - DELETE /api/v1/books/:id
-app.delete("/api/v1/books/:id", (req, res) => {
+app.delete("/api/v1/books/:id", (req, res, next) => {
   const bookId = req.params.id;
   if (!ObjectId.isValid(req.params.id)) {
   return res.status(400).json({
