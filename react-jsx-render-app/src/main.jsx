@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 
-const name = "Ravi";
-const age = 25;
+const name = "Balagangadhar";
+const age = 20;
 const message = (
   <span>Hello, my name is {name} and I am {age} years old.</span>
 );
