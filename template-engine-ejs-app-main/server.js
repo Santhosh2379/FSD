@@ -1,4 +1,7 @@
+
 import express from "express";
+import dotenv from "dotenv";
+
 import {
   createProduct,
   readProducts,
@@ -8,38 +11,56 @@ import {
   deleteProduct,
   createProductForm,
 } from "./controllers/productController.js";
-import dotenv from "dotenv";
+
 import connectDB from "./config/db.js";
 
 dotenv.config();
-await connectDB(process.env.MONGO_URI, process.env.DB_NAME);
-const app = express();
-app.use(express.json());
 
 const PORT = process.env.PORT || 9500;
+const MONGO_URI = process.env.MONGO_URI;
+const DB_NAME = process.env.DB_NAME;
 
-app.set("view engine", "ejs");
+const app = express();
+
+// Middleware
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//CRUD operations for products
-// Route to render the product form for adding a new product
+// EJS configuration
+app.set("view engine", "ejs");
+
+// Product routes
 app.get("/product-form", createProductForm);
-// Route to handle adding a new product
 app.post("/add-product", createProduct);
 
-// Route to display all products
 app.get("/", readProducts);
-// Route to display a single product
 app.get("/product/:id", readProductById);
 
-// Route to render the product form for editing an existing product
 app.get("/product-form/:id", updateProductForm);
-// Route to handle updating an existing product
 app.post("/add-product/:id", updateProduct);
 
-// Route to handle deleting a product
 app.get("/delete-product/:id", deleteProduct);
 
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
+// Start server after database connection
+const startServer = async () => {
+  try {
+    if (!MONGO_URI) {
+      throw new Error("MONGO_URI environment variable is missing");
+    }
+
+    if (!DB_NAME) {
+      throw new Error("DB_NAME environment variable is missing");
+    }
+
+    await connectDB(MONGO_URI, DB_NAME);
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
